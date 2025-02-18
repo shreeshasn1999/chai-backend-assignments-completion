@@ -14,14 +14,16 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video Id missing");
   }
 
-  const videoLikeObj = await Like.findOne({ likedBy, video: videoId });
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Not a valid ID");
+  }
+
+  const videoLikeObj = await Like.findOne({ video: videoId, likedBy });
 
   if (!videoLikeObj) {
     const likeAdded = await Like.create({
-      video: videoLikeObj._id,
+      video: videoId,
       likedBy,
-      comment: "",
-      tweet: "",
     });
     if (!likeAdded) throw new ApiError(500, "Error while adding to Mongo DB");
     return res.status(204).json(new ApiResponse(204, {}, "Liked the video"));
@@ -50,8 +52,6 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     const likeAdded = await Like.create({
       comment: commentLikeObj._id,
       likedBy,
-      video: "",
-      tweet: "",
     });
     if (!likeAdded) throw new ApiError(500, "Error while adding to Mongo DB");
     return res.status(204).json(new ApiResponse(204, {}, "Liked the comment"));
@@ -80,8 +80,6 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
     const likeAdded = await Like.create({
       tweet: tweetLikeObj._id,
       likedBy,
-      comment: "",
-      video: "",
     });
     if (!likeAdded) throw new ApiError(500, "Error while adding to Mongo DB");
     return res.status(204).json(new ApiResponse(204, {}, "Liked the tweet"));

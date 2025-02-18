@@ -4,7 +4,6 @@ import { Subscription } from "../models/subscription.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { subscribe } from "diagnostics_channel";
 
 const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
@@ -69,6 +68,23 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "users",
+        localField: "channel",
+        foreignField: "_id",
+        as: "channel",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              email: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
         localField: "subscriber",
         foreignField: "_id",
         as: "subscriber",
@@ -83,18 +99,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         ],
       },
     },
-    {
-      $addFields: {
-        subscriber: {
-          $first: "$subscriber",
-        },
-      },
-    },
-    {
-      $replaceRoot: { newRoot: "$subscriber" }, // Replace the root document with `productDetails`
-    },
   ]);
 
+  console.log(channelSubs);
   return res
     .status(200)
     .json(
@@ -118,41 +125,23 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Channel ID is not valid");
   }
 
-  const channelsSubbedTo = await Subscription.aggregate([
+  const channelsSubbedTo = await User.aggregate([
     {
       $match: {
-        subscriber: new mongoose.Types.ObjectId(subscriberId),
+        _id: new mongoose.Types.ObjectId(subscriberId),
       },
     },
-
     {
       $lookup: {
-        from: "users",
-        localField: "channel",
-        foreignField: "_id",
-        as: "subscribedTo",
-        pipeline: [
-          {
-            $project: {
-              fullName: 1,
-              email: 1,
-              avatar: 1,
-            },
-          },
-        ],
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "channelsSubbedTo",
       },
-    },
-    {
-      $addFields: {
-        subscriber: {
-          $first: "$subscribedTo",
-        },
-      },
-    },
-    {
-      $replaceRoot: { newRoot: "$subscribedTo" }, // Replace the root document with `subscribedTo`
     },
   ]);
+
+  console.log(channelsSubbedTo);
 
   return res
     .status(200)

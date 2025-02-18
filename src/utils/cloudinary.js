@@ -24,10 +24,12 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-async function deleteFromCloudinary(publicImageUrl) {
+async function deleteFromCloudinary(publicImageUrl, resource_type) {
   try {
     const public_id = publicImageUrl.split("/").at(-1).split(".")[0];
-    const response = await cloudinary.uploader.destroy(public_id);
+    const response = await cloudinary.uploader.destroy(public_id, {
+      resource_type,
+    });
     return response;
   } catch (error) {
     return { result: "error", message: error.message };

@@ -295,7 +295,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   }
 
   //TODO: delete old image - assignment
-  const cloudinaryRes = await deleteFromCloudinary(req.user.avatar);
+  const cloudinaryRes = await deleteFromCloudinary(req.user.avatar, "image");
 
   if (cloudinaryRes.result === "error") {
     throw new ApiError(500, cloudinaryRes.message);
@@ -331,7 +331,10 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
   if (req.user.coverImage !== "") {
     console.log("Entered if for cover Image check");
-    const cloudinaryRes = await deleteFromCloudinary(req.user.coverImage);
+    const cloudinaryRes = await deleteFromCloudinary(
+      req.user.coverImage,
+      "image"
+    );
     if (cloudinaryRes.result === "error") {
       throw new ApiError(500, cloudinaryRes.message);
     }
